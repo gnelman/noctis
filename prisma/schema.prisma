@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Member {
+  id            String    @id @default(cuid())
+  phone         String    @unique
+  pseudo        String    @unique
+  age           Int
+  city          String
+  country       String
+  gender        String
+  status        String
+  lookingFor    String
+  bio           String?
+  avatar        String?
+  isActive      Boolean   @default(true)
+  isBanned      Boolean   @default(false)
+  trialEnd      DateTime?
+  createdAt     DateTime  @default(now())
+  subscriptions Subscription[]
+  sentMessages  Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  stories       Story[]
+  reportsGiven  Report[]  @relation("ReportsGiven")
+  reportsReceived Report[] @relation("ReportsReceived")
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id])
+  status    String
+  startDate DateTime @default(now())
+  endDate   DateTime
+  amount    Int
+  payment   String
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     Member   @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   Member   @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model Story {
+  id        String    @id @default(cuid())
+  authorId  String
+  author    Member    @relation(fields: [authorId], references: [id])
+  title     String
+  summary   String
+  status    String    @default("pending")
+  tags      String[]
+  views     Int       @default(0)
+  likes     Int       @default(0)
+  createdAt DateTime  @default(now())
+  chapters  Chapter[]
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id])
+  number    Int
+  title     String
+  content   String
+  isFree    Boolean  @default(false)
+  wordCount Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  reporterId String
+  reporter   Member   @relation("ReportsGiven", fields: [reporterId], references: [id])
+  reportedId String
+  reported   Member   @relation("ReportsReceived", fields: [reportedId], references: [id])
+  reason     String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+}
